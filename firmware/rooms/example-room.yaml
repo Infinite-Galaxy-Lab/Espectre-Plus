@@ -1,0 +1,55 @@
+# One room = one file. Copy this file, change the substitutions, and flash.
+# All secrets are read from firmware/rooms/secrets.yaml (not committed).
+
+substitutions:
+  room_name: Study
+  node_name: espectre-plus-study
+
+  # ESP32-S3 GPIOs. Change to match your board and driver board.
+  main_gpio: GPIO4
+  aux_gpio: GPIO5
+  button_main_gpio: GPIO6
+  button_aux_gpio: GPIO7
+  button_mode_gpio: GPIO15
+  i2c_sda: GPIO8
+  i2c_scl: GPIO9
+  ld2410_tx: GPIO17
+  ld2410_rx: GPIO18
+  lux_adc_pin: GPIO1
+
+  # INA226 addresses are selected by the A0 pin: 0x40 (A0=GND), 0x41 (A0=VCC).
+  main_ina_address: "0x40"
+  aux_ina_address: "0x41"
+  main_shunt: "0.01 ohm"
+  aux_shunt: "0.01 ohm"
+  main_max_current: "2.0 A"
+  aux_max_current: "2.0 A"
+
+  # Control defaults; tune on site.
+  lux_on: 250
+  lux_off: 350
+  aux_lux_threshold: 80
+  main_min_brightness: 20%
+  main_max_brightness: 100%
+  main_fallback_brightness: 60%
+  aux_brightness: 40%
+  presence_confirm: 1s
+  absence_timeout: 300s
+  csi_hold: 60s
+  lux_reduce_delay: 60s
+  dim_step_interval: 10s
+  dim_step: 10%
+  fade: 1s
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [lighting_controller]
+
+packages:
+  base: !include ../packages/base.yaml
+  sensors: !include ../packages/sensors.yaml
+  csi: !include ../packages/csi.yaml
+  actuators: !include ../packages/actuators.yaml
+  control: !include ../packages/control.yaml

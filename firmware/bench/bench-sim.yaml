@@ -1,0 +1,139 @@
+# Simulated sensors driving the real controller/PWM; not production.
+substitutions:
+  room_name: Bench
+  main_gpio: GPIO4
+  aux_gpio: GPIO5
+  button_main_gpio: GPIO6
+  button_aux_gpio: GPIO7
+  button_mode_gpio: GPIO15
+  lux_on: 250
+  lux_off: 350
+  aux_lux_threshold: 80
+  main_min_brightness: 20%
+  main_max_brightness: 100%
+  main_fallback_brightness: 60%
+  aux_brightness: 40%
+  presence_confirm: 1s
+  absence_timeout: 8s
+  csi_hold: 3s
+  lux_reduce_delay: 5s
+  dim_step_interval: 2s
+  dim_step: 10%
+  fade: 500ms
+
+esphome:
+  name: espectre-plus-bench-sim
+  friendly_name: ESPectre Plus Bench Sim
+  project:
+    name: espectre-plus.bench-sim
+    version: "0.2.0"
+  on_boot:
+    priority: -100
+    then:
+      - script.execute: sim_sequence
+
+packages:
+  common: !include common.yaml
+  actuators: !include ../packages/actuators.yaml
+  control: !include ../packages/control.yaml
+
+sensor:
+  - platform: template
+    id: illuminance
+    name: "Simulated Lux"
+    unit_of_measurement: lx
+    accuracy_decimals: 0
+    update_interval: 60s
+
+binary_sensor:
+  - platform: template
+    id: mmwave_presence
+    name: "Simulated mmWave Presence"
+    device_class: occupancy
+
+  - platform: template
+    id: csi_motion
+    name: "Simulated CSI Motion"
+
+script:
+  - id: sim_sequence
+    mode: restart
+    then:
+      - lambda: |-
+          ESP_LOGI("sim", "stage 1/6: empty room, 50 lx -> lights off");
+      - sensor.template.publish:
+          id: illuminance
+          state: 50
+      - binary_sensor.template.publish:
+          id: mmwave_presence
+          state: false
+      - binary_sensor.template.publish:
+          id: csi_motion
+          state: false
+      - delay: 10s
+
+      - lambda: |-
+          ESP_LOGI("sim", "stage 2/6: person enters, 50 lx -> main+aux on");
+      - binary_sensor.template.publish:
+          id: mmwave_presence
+          state: true
+      - delay: 7s
+
+      - lambda: |-
+          ESP_LOGI("sim", "stage 3/6: ambient rises to 300 lx -> hold");
+      - sensor.template.publish:
+          id: illuminance
+          state: 300
+      - delay: 7s
+
+      - lambda: |-
+          ESP_LOGI("sim", "stage 4/6: ambient 500 lx -> delayed dim");
+      - sensor.template.publish:
+          id: illuminance
+          state: 500
+      - delay: 10s
+
+      - lambda: |-
+          ESP_LOGI("sim", "stage 5/6: person leaves, CSI hold then absence");
+      - binary_sensor.template.publish:
+          id: mmwave_presence
+          state: false
+      - binary_sensor.template.publish:
+          id: csi_motion
+          state: true
+      - delay: 2s
+      - binary_sensor.template.publish:
+          id: csi_motion
+          state: false
+      - delay: 12s
+
+      - lambda: |-
+          ESP_LOGI("sim", "stage 6/6: manual override via local/HA path");
+      - binary_sensor.template.publish:
+          id: mmwave_presence
+          state: true
+      - sensor.template.publish:
+          id: illuminance
+          state: 50
+      - delay: 3s
+      - lambda: id(lighting).toggle_main();
+      - delay: 4s
+      - lambda: id(lighting).toggle_auto_mode();
+      - delay: 2s
+      - script.execute: sim_sequence
+
+interval:
+  - interval: 3s
+    then:
+      - lambda: |-
+          ESP_LOGI("sim", "state=%s occupied=%d lux=%.0f presence=%d motion=%d "
+                           "main=%s@%.0f%% aux=%s@%.0f%%",
+                   id(control_state).state.c_str(),
+                   id(occupancy).state,
+                   id(illuminance).state,
+                   id(mmwave_presence).state,
+                   id(csi_motion).state,
+                   id(main_light).remote_values.is_on() ? "on" : "off",
+                   id(main_light).remote_values.get_brightness() * 100.0f,
+                   id(aux_light).remote_values.is_on() ? "on" : "off",
+                   id(aux_light).remote_values.get_brightness() * 100.0f);

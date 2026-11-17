@@ -1,0 +1,63 @@
+# Bare-board smoke test; not production.
+substitutions:
+  room_name: Bench
+
+esphome:
+  name: espectre-plus-bench
+  friendly_name: ESPectre Plus Bench
+  project:
+    name: espectre-plus.bench
+    version: "0.2.0"
+
+packages:
+  common: !include common.yaml
+
+logger:
+  level: DEBUG
+
+sensor:
+  - platform: adc
+    pin: GPIO1
+    name: "Bench ADC GPIO1"
+    attenuation: 12db
+    update_interval: 500ms
+    filters:
+      - multiply: 3.3
+
+  - platform: debug
+    free:
+      name: "Bench Free Heap"
+    block:
+      name: "Bench Largest Free Block"
+    fragmentation:
+      name: "Bench Heap Fragmentation"
+    loop_time:
+      name: "Bench Loop Time"
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Bench Reset Reason"
+
+output:
+  - platform: ledc
+    id: bench_pwm_main
+    pin: GPIO4
+    frequency: 5000Hz
+  - platform: ledc
+    id: bench_pwm_aux
+    pin: GPIO5
+    frequency: 5000Hz
+
+# Slow sweep for meter/scope checks.
+interval:
+  - interval: 10s
+    then:
+      - lambda: |-
+          static uint8_t step = 0;
+          const float levels[5] = {0.0f, 0.25f, 0.5f, 0.75f, 1.0f};
+          id(bench_pwm_main).set_level(levels[step]);
+          id(bench_pwm_aux).set_level(levels[4 - step]);
+          ESP_LOGI("bench", "PWM sweep: main=%.0f%% aux=%.0f%%", levels[step] * 100.0f,
+                   levels[4 - step] * 100.0f);
+          step = (step + 1) % 5;

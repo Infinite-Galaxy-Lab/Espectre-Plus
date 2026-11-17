@@ -1,0 +1,61 @@
+# Two 24 V LED channels; MOSFET driver converts 3.3 V PWM.
+
+output:
+  - platform: ledc
+    id: main_pwm
+    pin: ${main_gpio}
+    frequency: 5000Hz
+  - platform: ledc
+    id: aux_pwm
+    pin: ${aux_gpio}
+    frequency: 5000Hz
+
+light:
+  - platform: monochromatic
+    id: main_light
+    name: "${room_name} Main Light"
+    output: main_pwm
+    default_transition_length: 1s
+    gamma_correct: 2.2
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: monochromatic
+    id: aux_light
+    name: "${room_name} Aux Light"
+    output: aux_pwm
+    default_transition_length: 1s
+    gamma_correct: 2.2
+    restore_mode: RESTORE_DEFAULT_OFF
+
+binary_sensor:
+  - platform: gpio
+    id: button_main
+    pin:
+      number: ${button_main_gpio}
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      - delayed_on_off: 20ms
+    on_press:
+      - lambda: id(lighting).toggle_main();
+
+  - platform: gpio
+    id: button_aux
+    pin:
+      number: ${button_aux_gpio}
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      - delayed_on_off: 20ms
+    on_press:
+      - lambda: id(lighting).toggle_aux();
+
+  - platform: gpio
+    id: button_mode
+    pin:
+      number: ${button_mode_gpio}
+      mode: INPUT_PULLUP
+      inverted: true
+    filters:
+      - delayed_on_off: 20ms
+    on_press:
+      - lambda: id(lighting).toggle_auto_mode();

@@ -1,0 +1,119 @@
+# Shared sensors; pins and I2C addresses come from room substitutions.
+
+i2c:
+  sda: ${i2c_sda}
+  scl: ${i2c_scl}
+  frequency: 100kHz
+  scan: true
+
+uart:
+  id: uart_ld2410
+  tx_pin: ${ld2410_tx}
+  rx_pin: ${ld2410_rx}
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+ld2410:
+  id: ld2410_radar
+
+binary_sensor:
+  - platform: ld2410
+    ld2410_id: ld2410_radar
+    has_target:
+      id: mmwave_presence
+      name: "${room_name} mmWave Presence"
+      device_class: occupancy
+      filters:
+        - timeout: 5s
+
+  - platform: status
+    name: "${room_name} Node Online"
+
+sensor:
+  # 0-2.5 V illuminance; 20 Hz sampling, 5-sample average, calibrate on site.
+  - platform: adc
+    pin: ${lux_adc_pin}
+    id: illuminance
+    name: "${room_name} Illuminance"
+    attenuation: 12db
+    update_interval: 50ms
+    unit_of_measurement: lx
+    device_class: illuminance
+    state_class: measurement
+    accuracy_decimals: 0
+    filters:
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 1
+      - calibrate_linear:
+          - 0.0 -> 0.0
+          - 2.5 -> 1000.0
+      - clamp:
+          min_value: 0
+          max_value: 2000
+      - timeout: 1s
+
+  - platform: ina226
+    id: main_ina
+    address: ${main_ina_address}
+    shunt_resistance: ${main_shunt}
+    max_current: ${main_max_current}
+    adc_time: 1100us
+    adc_averaging: 4
+    update_interval: 200ms
+    bus_voltage:
+      id: main_voltage
+      name: "${room_name} Main Voltage"
+      filters:
+        - throttle: 5s
+        - timeout: 10s
+    current:
+      id: main_current
+      name: "${room_name} Main Current"
+      filters:
+        - throttle: 5s
+        - timeout: 10s
+    power:
+      id: main_power
+      name: "${room_name} Main Power"
+      filters:
+        - throttle: 5s
+        - timeout: 10s
+
+  - platform: ina226
+    id: aux_ina
+    address: ${aux_ina_address}
+    shunt_resistance: ${aux_shunt}
+    max_current: ${aux_max_current}
+    adc_time: 1100us
+    adc_averaging: 4
+    update_interval: 200ms
+    bus_voltage:
+      id: aux_voltage
+      name: "${room_name} Aux Voltage"
+      filters:
+        - throttle: 5s
+        - timeout: 10s
+    current:
+      id: aux_current
+      name: "${room_name} Aux Current"
+      filters:
+        - throttle: 5s
+        - timeout: 10s
+    power:
+      id: aux_power
+      name: "${room_name} Aux Power"
+      filters:
+        - throttle: 5s
+        - timeout: 10s
+
+  - platform: wifi_signal
+    name: "${room_name} Wi-Fi RSSI"
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: uptime
+    name: "${room_name} Uptime"
+    update_interval: 60s
+    entity_category: diagnostic

@@ -1,0 +1,38 @@
+# Shared board/logger/I2C setup for bench profiles.
+esphome:
+  min_version: 2026.10.0
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: INFO
+  hardware_uart: UART0
+
+debug:
+  update_interval: 30s
+
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+  frequency: 100kHz
+  scan: true
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [lighting_controller]
+
+sensor:
+  - platform: uptime
+    name: "${room_name} Uptime"
+    update_interval: 30s

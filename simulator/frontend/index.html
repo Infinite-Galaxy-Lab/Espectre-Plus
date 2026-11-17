@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESPectre Plus · 联调预览</title>
+  <link rel="stylesheet" href="/style.css?v=5">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="mark">E</span>
+        <div>
+          <h1>ESPectre Plus</h1>
+          <p>NAS / Home Assistant 联调预览</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="badge badge-demo" id="demoBadge">演示运行</span>
+        <span class="live"><i id="liveDot"></i><span id="liveText">本地模拟</span></span>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card span-2 status-card">
+        <div class="card-head">
+          <div><span class="eyebrow">STUDY ROOM</span><h2>房间状态</h2></div>
+          <span class="status-pill" id="statusValue">auto</span>
+        </div>
+        <div class="status-grid">
+          <div class="metric">
+            <span class="metric-label">占用</span>
+            <strong id="occState" class="metric-value">无人</strong>
+            <span class="metric-note" id="occNote">等待有人进入</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">模式</span>
+            <strong id="modeState" class="metric-value">AUTO</strong>
+            <span class="metric-note" id="modeNote">设备内自动策略</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">照度</span>
+            <strong class="metric-value"><span id="luxValue">50</span><small> lx</small></strong>
+            <span class="metric-note">双阈值 250 / 350 lx</span>
+          </div>
+        </div>
+        <p class="status-text" id="statusText">演示台架正在播放房间场景。</p>
+      </section>
+
+      <section class="card span-2 chart-card">
+        <div class="card-head">
+          <div><span class="eyebrow">POWER</span><h2>实时功率</h2></div>
+          <strong class="headline"><span id="totalPower">0.0</span><small> W</small></strong>
+        </div>
+        <div class="power-split">
+          <span>主灯 <b id="mainPower">0.0 W</b></span>
+          <span>辅灯 <b id="auxPower">0.0 W</b></span>
+        </div>
+        <canvas id="powerChart" height="132"></canvas>
+      </section>
+
+      <section class="card span-2 wifi-card">
+        <div class="card-head">
+          <div><span class="eyebrow">WIFI CSI</span><h2>信道 CSI 波动</h2></div>
+          <div class="wifi-head-actions">
+            <span class="source-pill" id="wifiSource">模拟 CSI · CH 6</span>
+            <button class="btn btn-ghost btn-sm" id="wifiBurstBtn">模拟干扰</button>
+          </div>
+        </div>
+        <div class="wifi-metrics">
+          <span>RSSI <b id="wifiRssi">--</b></span>
+          <span>底噪 <b id="wifiNoise">--</b></span>
+          <span><span id="wifiMetricLabel">干扰强度</span> <b id="wifiInterference">--</b></span>
+          <span>链路质量 <b id="wifiQuality">--</b></span>
+        </div>
+        <canvas id="wifiChart" height="186"></canvas>
+        <div class="wifi-legend">
+          <span id="wifiSpectrumLegend">上方：归一化 CSI 幅值</span>
+          <span id="wifiTrendLegend">下方：CSI 波动趋势</span>
+        </div>
+        <p class="fineprint" id="wifiFineprint">正在检测 CSI 数据源…</p>
+      </section>
+      <section class="card span-2 lights-card">
+        <div class="card-head">
+          <div><span class="eyebrow">LIGHTING</span><h2>灯光</h2></div>
+          <span class="hint" id="lightHint">自动模式</span>
+        </div>
+        <div class="light-row">
+          <label class="switch">
+            <input type="checkbox" id="mainOn">
+            <span class="slider"><span class="knob"></span></span>
+          </label>
+          <div class="light-info">
+            <div class="light-title"><strong>主灯</strong><span id="mainBrightnessValue">0%</span></div>
+            <input type="range" id="mainBrightness" min="0" max="100" step="1" value="0">
+          </div>
+        </div>
+        <div class="light-row">
+          <label class="switch">
+            <input type="checkbox" id="auxOn">
+            <span class="slider"><span class="knob"></span></span>
+          </label>
+          <div class="light-info">
+            <div class="light-title"><strong>辅灯</strong><span id="auxBrightnessValue">0%</span></div>
+            <input type="range" id="auxBrightness" min="0" max="100" step="1" value="0">
+          </div>
+        </div>
+      </section>
+
+      <section class="card span-2 energy-card">
+        <div class="card-head">
+          <div><span class="eyebrow">ENERGY</span><h2>用电与电费</h2></div>
+          <label class="price"><span>电价</span><input id="price" type="number" min="0" max="5" step="0.01" value="0.6"><small>元/kWh</small></label>
+        </div>
+        <div class="energy-grid">
+          <div><span>今日电量</span><strong id="todayEnergy">0.142<small> kWh</small></strong></div>
+          <div><span>本月电量</span><strong id="monthEnergy">2.350<small> kWh</small></strong></div>
+          <div><span>今日电费</span><strong id="todayCost">0.09<small> 元</small></strong></div>
+          <div><span>本月电费</span><strong id="monthCost">1.41<small> 元</small></strong></div>
+        </div>
+      </section>
+
+      <section class="card span-2 controls-card">
+        <div class="card-head">
+          <div><span class="eyebrow">SIMULATION</span><h2>场景控制</h2></div>
+          <span class="hint">仅模拟 HA 侧数据</span>
+        </div>
+        <div class="control-row">
+          <button class="btn" id="presenceBtn">模拟有人</button>
+          <button class="btn" id="demoToggle">暂停演示</button>
+          <button class="btn btn-ghost" id="resetBtn">重置</button>
+        </div>
+        <div class="range-row">
+          <label for="luxRange">环境照度</label>
+          <input type="range" id="luxRange" min="0" max="1000" step="10" value="50">
+          <output id="luxRangeValue">50 lx</output>
+        </div>
+        <p class="fineprint">模拟值只用于预览页面和下一轮 HA 接口对接，不代表固件实测。</p>
+      </section>
+
+      <section class="card span-2 events-card">
+        <div class="card-head">
+          <div><span class="eyebrow">EVENTS</span><h2>状态事件</h2></div>
+          <span class="hint" id="updatedAt">--:--:--</span>
+        </div>
+        <ol class="event-list" id="eventsList"></ol>
+      </section>
+    </main>
+
+    <footer>
+      <span>ESPectre Plus · NAS 模拟台架</span>
+      <span id="footerWifi">CSI 数据源检测中</span>
+    </footer>
+  </div>
+  <script src="/app.js?v=5"></script>
+</body>
+</html>

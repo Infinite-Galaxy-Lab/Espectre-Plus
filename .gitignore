@@ -1,0 +1,66 @@
+# Secrets and local configuration
+firmware/secrets.yaml
+secrets.yaml
+*.key
+*.pem
+*.p12
+.env
+.env.*
+
+# ESPHome / PlatformIO build artifacts
+.esphome/
+.pio/
+.pioenvs/
+.piolibdeps/
+firmware/.esphome/
+firmware/rooms/.esphome/
+*.bin
+*.elf
+*.map
+*.hex
+*.uf2
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.uv/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local upstream reference (not part of this repository)
+upstream-espectre/
+tmp/
+build/
+cmake-build-*/
+
+# Host-side test build
+build-host/
+
+
+# Local logs
+*.log
+
+# Internal development handoff notes (may contain local environment details)
+docs/handoff/
+
+# Additional credential and local data files
+.envrc
+*.crt
+*.cer
+*.pfx
+*.jks
+*.keystore
+*.sqlite
+*.sqlite3
+*.db
+*.bak

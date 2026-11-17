@@ -1,0 +1,133 @@
+# ESPectre Plus HA package (Study example).
+# Copy to config/packages/; replace the study prefix and unique_ids for another room.
+# Requires: sensor.study_{main,aux}_power (W), light.study_{main,aux}_light,
+# switch.study_auto_mode, binary_sensor.study_occupancy.
+
+input_number:
+  study_electricity_price:
+    name: Study Electricity Price
+    icon: mdi:currency-cny
+    min: 0
+    max: 5
+    step: 0.01
+    mode: box
+    unit_of_measurement: "元/kWh"
+    initial: 0.6
+
+# W -> kWh; source must be a power sensor in W.
+sensor:
+  - platform: integration
+    name: Study Main Energy
+    unique_id: study_main_energy
+    source: sensor.study_main_power
+    method: trapezoidal
+    unit_prefix: k
+    unit_time: h
+    round: 3
+
+  - platform: integration
+    name: Study Aux Energy
+    unique_id: study_aux_energy
+    source: sensor.study_aux_power
+    method: trapezoidal
+    unit_prefix: k
+    unit_time: h
+    round: 3
+
+# Derived totals; availability prevents false zeros when a source is missing.
+template:
+  - sensor:
+      - name: Study Total Power
+        unique_id: study_total_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:flash
+        availability: >-
+          {{ has_value('sensor.study_main_power') and has_value('sensor.study_aux_power') }}
+        state: >-
+          {{ (states('sensor.study_main_power') | float(0))
+             + (states('sensor.study_aux_power') | float(0)) }}
+
+      - name: Study Total Energy
+        unique_id: study_total_energy
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total_increasing
+        icon: mdi:lightning-bolt
+        availability: >-
+          {{ has_value('sensor.study_main_energy') and has_value('sensor.study_aux_energy') }}
+        state: >-
+          {{ ((states('sensor.study_main_energy') | float(0))
+              + (states('sensor.study_aux_energy') | float(0))) | round(3) }}
+
+      - name: Study Daily Energy Cost
+        unique_id: study_daily_energy_cost
+        unit_of_measurement: "元"
+        icon: mdi:cash
+        state_class: total
+        availability: >-
+          {{ has_value('sensor.study_total_energy_daily') }}
+        state: >-
+          {{ ((states('sensor.study_total_energy_daily') | float(0))
+              * (states('input_number.study_electricity_price') | float(0.6)))
+             | round(2) }}
+
+      - name: Study Monthly Energy Cost
+        unique_id: study_monthly_energy_cost
+        unit_of_measurement: "元"
+        icon: mdi:cash-multiple
+        state_class: total
+        availability: >-
+          {{ has_value('sensor.study_total_energy_monthly') }}
+        state: >-
+          {{ ((states('sensor.study_total_energy_monthly') | float(0))
+              * (states('input_number.study_electricity_price') | float(0.6)))
+             | round(2) }}
+
+utility_meter:
+  study_main_energy_daily:
+    source: sensor.study_main_energy
+    cycle: daily
+  study_main_energy_monthly:
+    source: sensor.study_main_energy
+    cycle: monthly
+  study_aux_energy_daily:
+    source: sensor.study_aux_energy
+    cycle: daily
+  study_aux_energy_monthly:
+    source: sensor.study_aux_energy
+    cycle: monthly
+  study_total_energy_daily:
+    source: sensor.study_total_energy
+    cycle: daily
+  study_total_energy_monthly:
+    source: sensor.study_total_energy
+    cycle: monthly
+
+# Alert only when both power entities stay unavailable; avoids a single INA226 fault.
+automation:
+  - id: espectre_plus_study_node_offline
+    alias: "Study 节点离线提醒"
+    description: "两个功率实体同时不可用超过 10 分钟。"
+    mode: single
+    max_exceeded: silent
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.study_main_power
+          - sensor.study_aux_power
+        to: "unavailable"
+        for: "00:10:00"
+    condition:
+      - condition: template
+        value_template: >-
+          {{ is_state('sensor.study_main_power', 'unavailable')
+             and is_state('sensor.study_aux_power', 'unavailable') }}
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "ESPectre Plus · Study 离线"
+          message: >-
+            Study 节点功率实体已不可用超过 10 分钟，请检查供电与 Wi-Fi。
+            本地照明继续工作；中断期间电量不补算。

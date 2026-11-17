@@ -1,0 +1,14 @@
+# CSI-only bench: ESPectre sensing and Direct raw stream, no lighting hardware.
+substitutions:
+  room_name: Bench CSI
+  node_name: espectre-plus-bench-csi
+
+esphome:
+  project:
+    name: espectre-plus.bench-csi
+    version: "0.3.0"
+
+packages:
+  common: !include common.yaml
+  base: !include ../packages/base.yaml
+  csi: !include ../packages/csi.yaml

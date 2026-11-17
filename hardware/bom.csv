@@ -1,0 +1,15 @@
+item,qty,example_part,purpose,notes
+ESP32-S3 development board,1,ESP32-S3-DevKitC-1 N16R8,Main controller,8 MB PSRAM recommended for ESPectre
+LD2410 mmWave sensor,1,LD2410C module,Presence detection,UART 256000 baud; 5 V supply
+INA226 module,2,INA226 breakout with 0.01 ohm shunt,Per-channel voltage/current/power,I2C addresses 0x40 and 0x41; check shunt value
+Logic-level N-MOSFET,2,IRLZ44N or AO3400 module,Low-side PWM dimming,Gate resistor 220 ohm and 10k pulldown
+24 V DC power supply,1,24 V 3 A certified adapter,LED supply,Keep mains section in a certified enclosure
+LED strip / fixture,2,24 V white LED strip,Main and aux light,Current about 1 A per 24 W channel
+Fuse,2,2 A slow-blow,Per-channel protection,Size according to actual load
+TVS / flyback diode,2,SS34 or SMBJ series,Transient suppression,Close to the load terminals
+Photoresistor,1,GL5528,Lux sensing,Needs calibration with a lux meter
+Resistor 10k ohm,4,1/4 W,Divider / I2C pull-up,Value depends on LDR and bus
+Capacitor 100 nF,2,Ceramic,ADC / gate noise filtering,Place close to the pin
+Push button,3,6x6 mm tactile,Local control,Active low with internal pull-up
+Wire / terminal blocks,1 set,18-20 AWG,24 V and signal wiring,Use ferrules and strain relief
+Enclosure,1,Plastic project box,Insulation and mounting,Leave Wi-Fi antenna clearance

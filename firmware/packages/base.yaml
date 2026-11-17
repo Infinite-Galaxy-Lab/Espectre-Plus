@@ -1,0 +1,52 @@
+# Shared room-node base; secrets live in firmware/rooms/secrets.yaml.
+
+esphome:
+  name: ${node_name}
+  friendly_name: ESPectre Plus ${room_name}
+  min_version: 2026.10.0
+  name_add_mac_suffix: false
+  project:
+    name: espectre-plus.lighting-node
+    version: "0.2.0"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  # Tested board: N16R8 (16 MB flash, 8 MB octal PSRAM).
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+
+# Remove or adjust for boards without octal PSRAM.
+psram:
+  mode: octal
+  speed: 80MHz
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # ESPectre needs a stable radio channel; modem sleep makes CSI noisy.
+  power_save_mode: none
+  ap:
+    ssid: "ESPectre Plus ${room_name} Fallback"
+    password: !secret fallback_ap_password
+
+captive_portal:
+
+logger:
+  level: INFO
+  # CH343 bridge on the tested board; use USB_SERIAL_JTAG for native USB only.
+  hardware_uart: UART0
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    # Reuse the API encryption key for OTA; no separate OTA password.
+    encryption:
+
+time:
+  - platform: homeassistant
+    id: ha_time

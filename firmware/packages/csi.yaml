@@ -1,0 +1,32 @@
+# ESPectre sensing and raw CSI streaming; shared by room and bench profiles.
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [espectre_direct]
+
+espectre:
+  id: espectre_csi
+  detection_algorithm: lightweight
+  traffic_generator_mode: ping
+  csi_capture_profile: auto
+
+espectre_direct:
+  sdk:
+    version: "3.2.0"
+
+binary_sensor:
+  - platform: espectre
+    motion:
+      id: csi_motion
+      name: "${room_name} CSI Motion"
+
+sensor:
+  - platform: espectre
+    movement:
+      id: csi_movement
+      name: "${room_name} CSI Movement"
+    diagnostics:
+      csi_occupancy:
+        id: csi_occupancy
+        name: "${room_name} CSI Occupancy"

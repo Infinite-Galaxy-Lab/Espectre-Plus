@@ -1,0 +1,46 @@
+# Controller wiring and HA-facing mode/status entities.
+
+lighting_controller:
+  id: lighting
+  illuminance: illuminance
+  presence: mmwave_presence
+  motion: csi_motion
+  main_light: main_light
+  aux_light: aux_light
+  auto_mode_switch: auto_mode
+
+  occupancy:
+    id: occupancy
+    name: "${room_name} Occupancy"
+    device_class: occupancy
+
+  status:
+    id: control_state
+    name: "${room_name} Control State"
+
+  # Initial design values from the report. Tune on site.
+  lux_on: ${lux_on}
+  lux_off: ${lux_off}
+  aux_lux_threshold: ${aux_lux_threshold}
+  main_min_brightness: ${main_min_brightness}
+  main_max_brightness: ${main_max_brightness}
+  main_fallback_brightness: ${main_fallback_brightness}
+  aux_brightness: ${aux_brightness}
+  presence_confirm: ${presence_confirm}
+  absence_timeout: ${absence_timeout}
+  csi_hold: ${csi_hold}
+  lux_reduce_delay: ${lux_reduce_delay}
+  dim_step_interval: ${dim_step_interval}
+  dim_step: ${dim_step}
+  fade: ${fade}
+
+switch:
+  - platform: template
+    id: auto_mode
+    name: "${room_name} Auto Mode"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - lambda: id(lighting).set_auto_mode(true);
+    turn_off_action:
+      - lambda: id(lighting).set_auto_mode(false);

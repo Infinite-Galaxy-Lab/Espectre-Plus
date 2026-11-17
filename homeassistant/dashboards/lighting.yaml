@@ -1,0 +1,123 @@
+# Study example Lovelace dashboard. Replace study prefix for another room.
+# Uses built-in cards only; paste into the raw configuration editor.
+title: 智能照明
+
+views:
+  - title: 房间概览
+    path: room
+    icon: mdi:home-lightbulb
+    cards:
+      - type: entities
+        title: Study · 状态
+        state_color: true
+        entities:
+          - entity: binary_sensor.study_occupancy
+            name: 占用
+          - entity: sensor.study_illuminance
+            name: 照度
+          - entity: switch.study_auto_mode
+            name: 自动模式
+          - entity: sensor.study_total_power
+            name: 当前总功率
+
+      - type: entities
+        title: Study · 灯光
+        state_color: true
+        entities:
+          - entity: light.study_main_light
+            name: 主灯
+          - entity: light.study_aux_light
+            name: 辅灯
+
+      - type: gauge
+        entity: sensor.study_illuminance
+        name: 照度
+        unit: lx
+        min: 0
+        max: 1000
+        needle: true
+        severity:
+          red: 0
+          yellow: 250
+          green: 350
+
+      - type: gauge
+        entity: sensor.study_total_power
+        name: 当前总功率
+        unit: W
+        min: 0
+        max: 100
+        needle: true
+        severity:
+          green: 0
+          yellow: 60
+          red: 90
+
+      - type: history-graph
+        title: 功率与照度（24 小时）
+        hours_to_show: 24
+        entities:
+          - entity: sensor.study_main_power
+            name: 主灯功率
+          - entity: sensor.study_aux_power
+            name: 辅灯功率
+          - entity: sensor.study_illuminance
+            name: 照度
+
+      - type: entities
+        title: Study · 用电与电费
+        entities:
+          - entity: sensor.study_main_energy_daily
+            name: 主灯今日
+          - entity: sensor.study_aux_energy_daily
+            name: 辅灯今日
+          - entity: sensor.study_total_energy_daily
+            name: 今日合计
+          - entity: sensor.study_total_energy_monthly
+            name: 本月合计
+          - entity: sensor.study_daily_energy_cost
+            name: 今日电费
+          - entity: sensor.study_monthly_energy_cost
+            name: 本月电费
+          - entity: input_number.study_electricity_price
+            name: 电价
+
+  - title: 用电与电费
+    path: energy
+    icon: mdi:chart-bar
+    cards:
+      - type: entities
+        title: 累计电能
+        entities:
+          - entity: sensor.study_main_energy
+            name: 主灯累计
+          - entity: sensor.study_aux_energy
+            name: 辅灯累计
+          - entity: sensor.study_total_energy
+            name: 累计合计
+          - entity: sensor.study_main_energy_monthly
+            name: 主灯本月
+          - entity: sensor.study_aux_energy_monthly
+            name: 辅灯本月
+
+      - type: statistics-graph
+        title: 每日用电（近 7 天）
+        chart_type: bar
+        period: day
+        days_to_show: 7
+        stat_types:
+          - change
+        entities:
+          - entity: sensor.study_main_energy
+            name: 主灯
+          - entity: sensor.study_aux_energy
+            name: 辅灯
+
+      - type: history-graph
+        title: 电费（近 7 天）
+        hours_to_show: 168
+        entities:
+          - entity: sensor.study_daily_energy_cost
+            name: 今日电费
+          - entity: sensor.study_monthly_energy_cost
+            name: 本月电费
